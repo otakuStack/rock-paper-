@@ -1,0 +1,91 @@
+# Throwdown — Rock Paper Scissors
+
+A simple, interactive Player vs Computer Rock-Paper-Scissors game built with plain HTML, CSS, and JavaScript.
+
+## Overview
+
+Throwdown lets a player compete against the computer in classic Rock-Paper-Scissors. The player picks a move, the computer picks randomly, the winner is decided instantly, and the score is tracked across rounds until the player resets the match. The entire game is self-contained in a single `.html` file — no installation, no server, no dependencies. Just open it in a browser and play.
+
+## Tech Stack
+
+- **HTML5** — page structure and semantic markup
+- **CSS3** — all styling and animation, written from scratch (no framework)
+- **Vanilla JavaScript (ES6+)** — all game logic and interactivity (no libraries)
+
+No React, no backend, no database, no build tools, no npm packages. One file, zero setup.
+
+## Why This Stack
+
+The game is small in scope and fully stateless between sessions (score only needs to live in memory while the tab is open), so a framework like React or Vue would add unnecessary overhead. Plain HTML/CSS/JS keeps the project:
+
+- **Lightweight** — a few hundred lines total, no bundler required
+- **Portable** — a single file that runs anywhere, in any modern browser
+- **Easy to read and extend** — straightforward DOM manipulation with no build step to reason about
+
+## Features
+
+- Player vs Computer gameplay with a truly random computer move
+- Rock / Paper / Scissors selection via clickable buttons
+- Automatic win/lose/tie comparison logic
+- Running score tracker (Player wins, Computer wins, Ties)
+- Round counter
+- Reset button to clear the score and start a new match
+- Short "throwing" delay before the result reveals, so each round feels like an actual match rather than an instant flash
+- Visual feedback: winning/losing hand glows green or red, ties glow gold, both hands "shake" on reveal
+- Fully responsive layout (works down to mobile widths)
+- Accessible: visible keyboard focus states, respects `prefers-reduced-motion`
+
+## Design Theme
+
+The UI is styled as an **arcade ticket-redemption machine**:
+
+- A marquee-style header with flickering bulbs (CSS keyframe animation)
+- The scoreboard and battle area are styled as torn ticket stubs, complete with punch-hole notches and a dashed perforated edge
+- Rock/Paper/Scissors are rendered as chunky, colored 3D arcade buttons that visually "press down" on click, done purely with CSS `box-shadow` layering — no JavaScript or images involved
+- A rotated rubber-stamp style "VS" badge between the two hands
+- Fonts: `Bungee` (display/headline) and `Space Mono` (body/labels), loaded from Google Fonts
+
+## How the Logic Works
+
+**Computer's move:**
+```js
+function randomChoice(){
+  const options = ['rock', 'paper', 'scissors'];
+  return options[Math.floor(Math.random() * options.length)];
+}
+```
+
+**Deciding the winner** — instead of writing out multiple `if/else` conditions for every rock/paper/scissors combination, the rules are stored in a single lookup object:
+```js
+const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+
+function decideWinner(player, computer){
+  if (player === computer) return 'tie';
+  return BEATS[player] === computer ? 'player' : 'computer';
+}
+```
+
+**Game state** — score, round count, and a `locked` flag (to stop double-clicks mid-animation) are held in plain JavaScript variables, updated directly and reflected back into the DOM after each round.
+
+**Reveal timing** — a `setTimeout` briefly delays the computer's reveal after the player picks, so the round has a bit of suspense instead of resolving instantly.
+
+## File Structure
+
+```
+rock-paper-scissors.html   → the entire game (HTML + CSS + JS in one file)
+README.md                  → this description
+```
+
+## How to Run
+
+1. Download `rock-paper-scissors.html`
+2. Double-click it (or open it with any browser: Chrome, Firefox, Safari, Edge)
+3. Click Rock, Paper, or Scissors to play — no installation or internet connection required (aside from loading the Google Font on first load)
+
+## Possible Future Extensions
+
+- Best-of-N match mode (first to X wins)
+- Sound effects on win/lose/tie
+- Local two-player mode (no computer)
+- Win-streak tracking and a "high score" display
+- A computer opponent with adaptive/pattern-based difficulty instead of pure random
