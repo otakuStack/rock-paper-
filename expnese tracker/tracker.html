@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Personal Finance Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 minimal-scrollbar">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-slate-900 text-white p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="p-2 bg-emerald-500 rounded-lg">
+                        <i data-lucide="wallet" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-tight">FinTrack</h1>
+                </div>
+                <nav class="space-y-2">
+                    <a href="#" class="flex items-center gap-3 px-4 py-3 bg-emerald-600 rounded-lg text-white font-medium transition">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+                    </a>
+                </nav>
+            </div>
+            <div class="pt-6 border-t border-slate-800 text-xs text-slate-400">
+                &copy; 2026 FinTrack App. Local Storage Active.
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+            <!-- Top Header -->
+            <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">Financial Overview</h2>
+                    <p class="text-sm text-gray-500">Track, optimize, and control your monthly spending.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openBudgetModal()" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition font-medium shadow-sm">
+                        <i data-lucide="sliders" class="w-4 h-4"></i> Set Budget
+                    </button>
+                    <button onclick="openExpenseModal()" class="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl hover:bg-emerald-700 transition font-medium shadow-md shadow-emerald-100">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add Expense
+                    </button>
+                </div>
+            </header>
+
+            <!-- Metrics Cards -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Total Spent -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Total Monthly Spent</p>
+                        <h3 id="metric-total-spent" class="text-3xl font-bold text-slate-900 mt-1">$0.00</h3>
+                    </div>
+                    <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+                        <i data-lucide="trending-up" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+                <!-- Budget Limit -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Monthly Budget</p>
+                        <h3 id="metric-budget" class="text-3xl font-bold text-slate-900 mt-1">$0.00</h3>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                        <i data-lucide="target" class="w-6 h-6"></i>
+                    </div>
+                </div>
+
+                <!-- Budget Status -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between col-span-1 sm:col-span-2 lg:col-span-1">
+                    <div>
+                        <p class="text-sm font-medium text-gray-400 uppercase tracking-wider">Remaining Balance</p>
+                        <h3 id="metric-remaining" class="text-3xl font-bold text-emerald-600 mt-1">$0.00</h3>
+                        <div class="w-full bg-gray-100 h-2 rounded-full mt-3 overflow-hidden">
+                            <div id="budget-progress-bar" class="bg-emerald-500 h-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="status-icon-container" class="p-3 bg-emerald-50 text-emerald-600 rounded-xl self-start">
+                        <i data-lucide="check-circle" id="status-icon" class="w-6 h-6"></i>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Visualizations and Quick Analysis -->
+            <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <!-- Chart Card -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-900">Category Breakdown</h4>
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <div class="relative w-full aspect-[2/1] lg:aspect-auto lg:h-64 flex items-center justify-center">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Table Mini -->
+                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-900">Top Categories</h4>
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-gray-400"></i>
+                    </div>
+                    <div id="category-list" class="space-y-4 overflow-y-auto flex-1 max-h-64 minimal-scrollbar">
+                        <!-- Dynamic Categories Injection -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expense List Table -->
+            <section class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h4 class="font-bold text-slate-900">Recent Transactions</h4>
+                    <div class="flex items-center gap-2">
+                        <select id="filter-category" onchange="renderDashboard()" class="border border-gray-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-emerald-500">
+                            <option value="All">All Categories</option>
+                            <option value="Food">Food</option>
+                            <option value="Rent/Bills">Rent/Bills</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th class="py-4 px-6">Description</th>
+                                <th class="py-4 px-6">Category</th>
+                                <th class="py-4 px-6">Date</th>
+                                <th class="py-4 px-6 text-right">Amount</th>
+                                <th class="py-4 px-6 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-table-body" class="divide-y divide-gray-100 text-sm">
+                            <!-- Dynamic Rows Injection -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="empty-state" class="hidden p-10 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+                    <i data-lucide="receipt" class="w-10 h-10 text-gray-300"></i>
+                    <p>No transaction history found. Add an expense to get started!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Expense Modal (Add/Edit) -->
+    <div id="expense-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 id="modal-title" class="font-bold text-slate-900 text-lg">Add Expense</h3>
+                <button onclick="closeExpenseModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="expense-form" onsubmit="handleExpenseFormSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="expense-id">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</label>
+                    <input type="text" id="expense-desc" required placeholder="e.g., Grocery Shopping" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-emerald-500 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Amount ($)</label>
+                        <input type="number" step="0.01" min="0.01" id="expense-amount" required placeholder="0.00" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-emerald-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Category</label>
+                        <select id="expense-category" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-emerald-500 text-sm bg-white">
+                            <option value="Food">Food</option>
+                            <option value="Rent/Bills">Rent/Bills</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Date</label>
+                    <input type="date" id="expense-date" required class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-emerald-500 text-sm">
+                </div>
+                <div class="pt-4 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeExpenseModal()" class="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition shadow-md shadow-emerald-100">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Budget Limit Modal -->
+    <div id="budget-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-200">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-900 text-lg">Set Monthly Budget</h3>
+                <button onclick="closeBudgetModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="budget-form" onsubmit="handleBudgetFormSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Monthly Spending Limit ($)</label>
+                    <input type="number" step="1" min="0" id="budget-input" required placeholder="2000" class="w-full border border-gray-200 rounded-xl px-4 py-2.5 focus:outline-emerald-500 text-sm">
+                </div>
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeBudgetModal()" class="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-xl transition shadow-md shadow-emerald-100">Apply Limit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Core App Logic Javascript -->
+    <script>
+        // State Management 
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let budgetLimit = parseFloat(localStorage.getItem('budgetLimit')) || 2500;
+        let categoryChart = null;
+
+        // Theme colors for Category visual sync
+        const categoryColors = {
+            'Food': '#f59e0b',          // Amber
+            'Rent/Bills': '#3b82f6',    // Blue
+            'Entertainment': '#8b5cf6', // Purple
+            'Transport': '#06b6d4',     // Cyan
+            'Shopping': '#ec4899',      // Pink
+            'Other': '#64748b'          // Slate
+        };
+
+        // DOM Initial Load
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            document.getElementById('expense-date').valueAsDate = new Date();
+            renderDashboard();
+        });
+
+        // Dashboard Compilation & Rendering Engine
+        function renderDashboard() {
+            const filterCategory = document.getElementById('filter-category').value;
+            
+            // Filters
+            const filteredExpenses = filterCategory === 'All' 
+                ? expenses 
+                : expenses.filter(exp => exp.category === filterCategory);
+
+            // Sort newest first
+            filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Component Rendering
+            renderMetrics();
+            renderTable(filteredExpenses);
+            renderCategoryAnalysis();
+            renderChart();
+            lucide.createIcons();
+        }
+
+        function renderMetrics() {
+            const totalSpent = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+            const remaining = budgetLimit - totalSpent;
+            const progressPercent = Math.min((totalSpent / budgetLimit) * 100, 100);
+
+            document.getElementById('metric-total-spent').innerText = `$${totalSpent.toFixed(2)}`;
+            document.getElementById('metric-budget').innerText = `$${budgetLimit.toFixed(2)}`;
+            document.getElementById('metric-remaining').innerText = `$${remaining.toFixed(2)}`;
+            
+            const progressBar = document.getElementById('budget-progress-bar');
+            progressBar.style.width = `${progressPercent}%`;
+
+            const iconContainer = document.getElementById('status-icon-container');
+            const remainingHeader = document.getElementById('metric-remaining');
+
+            // Budget guardrails styling check
+            if (remaining < 0) {
+                progressBar.className = "bg-rose-500 h-full transition-all duration-500";
+                iconContainer.className = "p-3 bg-rose-50 text-rose-600 rounded-xl self-start";
+                iconContainer.innerHTML = '<i data-lucide="alert-triangle" class="w-6 h-6"></i>';
+                remainingHeader.className = "text-3xl font-bold text-rose-600 mt-1";
+            } else {
+                progressBar.className = "bg-emerald-500 h-full transition-all duration-500";
+                iconContainer.className = "p-3 bg-emerald-50 text-emerald-600 rounded-xl self-start";
+                iconContainer.innerHTML = '<i data-lucide="check-circle" class="w-6 h-6"></i>';
+                remainingHeader.className = "text-3xl font-bold text-emerald-600 mt-1";
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('expense-table-body');
+            const emptyState = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            data.forEach(exp => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/70 transition";
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-medium text-slate-900">${escapeHtml(exp.description)}</td>
+                    <td class="py-4 px-6">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold" style="background-color: ${categoryColors[exp.category]}15; color: ${categoryColors[exp.category]}">
+                            <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${categoryColors[exp.category]}"></span>
+                            ${exp.category}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-gray-500">${formatDate(exp.date)}</td>
+                    <td class="py-4 px-6 text-right font-bold text-slate-900">$${parseFloat(exp.amount).toFixed(2)}</td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="editExpense('${exp.id}')" class="p-1 text-gray-400 hover:text-slate-600 transition" title="Edit">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteExpense('${exp.id}')" class="p-1 text-gray-400 hover:text-rose-600 transition" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCategoryAnalysis() {
+            const listContainer = document.getElementById('category-list');
+            listContainer.innerHTML = '';
+
+            const totals = getCategoryTotals();
+            const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+
+            Object.keys(categoryColors).forEach(cat => {
+                const amt = totals[cat] || 0;
+                const percentage = grandTotal > 0 ? ((amt / grandTotal) * 100).toFixed(0) : 0;
+
+                const item = document.createElement('div');
+                item.className = "space-y-1";
+                item.innerHTML = `
+                    <div class="flex justify-between text-xs font-medium">
+                        <span class="text-gray-600">${cat}</span>
+                        <span class="text-slate-900 font-bold">$${amt.toFixed(2)} (${percentage}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full" style="width: ${percentage}%; background-color: ${categoryColors[cat]}"></div>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            const totals = getCategoryTotals();
+            const labels = Object.keys(categoryColors);
+            const data = labels.map(cat => totals[cat] || 0);
+            const colors = labels.map(cat => categoryColors[cat]);
+
+            if (categoryChart) {
+                categoryChart.destroy();
+            }
+
+            // Zero fallback validation for Chart view
+            const hasData = data.some(val => val > 0);
+
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: hasData ? labels : ['No Data'],
+                    datasets: [{
+                        data: hasData ? data : [1],
+                        backgroundColor: hasData ? colors : ['#f1f5f9'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Helper Data Aggregators
+        function getCategoryTotals() {
+            return expenses.reduce((acc, exp) => {
+                acc[exp.category] = (acc[exp.category] || 0) + parseFloat(exp.amount);
+                return acc;
+            }, {});
+        }
+
+        // Mutation Event Handlers
+        function handleExpenseFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('expense-id').value;
+            const description = document.getElementById('expense-desc').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            const category = document.getElementById('expense-category').value;
+            const date = document.getElementById('expense-date').value;
+
+            if (id) {
+                // Edit Entry Mode
+                expenses = expenses.map(exp => exp.id === id ? { id, description, amount, category, date } : exp);
+            } else {
+                // Add Entry Mode
+                const newExpense = { id: crypto.randomUUID(), description, amount, category, date };
+                expenses.push(newExpense);
+            }
+
+            saveState();
+            closeExpenseModal();
+            renderDashboard();
+        }
+
+        function editExpense(id) {
+            const exp = expenses.find(e => e.id === id);
+            if (!exp) return;
+
+            document.getElementById('expense-id').value = exp.id;
+            document.getElementById('expense-desc').value = exp.description;
+            document.getElementById('expense-amount').value = exp.amount;
+            document.getElementById('expense-category').value = exp.category;
+            document.getElementById('expense-date').value = exp.date;
+
+            document.getElementById('modal-title').innerText = "Edit Expense";
+            openExpenseModal();
+        }
+
+        function deleteExpense(id) {
+            if (confirm("Are you sure you want to remove this transaction?")) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveState();
+                renderDashboard();
+            }
+        }
+
+        function handleBudgetFormSubmit(e) {
+            e.preventDefault();
+            budgetLimit = parseFloat(document.getElementById('budget-input').value) || 0;
+            localStorage.setItem('budgetLimit', budgetLimit);
+            closeBudgetModal();
+            renderDashboard();
+        }
+
+        // State Save Helpers
+        function saveState() {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        // Modals Toggles 
+        function openExpenseModal() {
+            document.getElementById('expense-modal').style.display = 'flex';
+        }
+
+        function closeExpenseModal() {
+            document.getElementById('expense-modal').style.display = 'none';
+            document.getElementById('expense-form').reset();
+            document.getElementById('expense-id').value = '';
+            document.getElementById('modal-title').innerText = "Add Expense";
+            document.getElementById('expense-date').valueAsDate = new Date();
+        }
+
+        function openBudgetModal() {
+            document.getElementById('budget-input').value = budgetLimit;
+            document.getElementById('budget-modal').style.display = 'flex';
+        }
+
+        function closeBudgetModal() {
+            document.getElementById('budget-modal').style.display = 'none';
+        }
+
+        // Presentation Utilities
+        function formatDate(dateStr) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString(undefined, options);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
