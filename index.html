@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Throwdown — Rock Paper Scissors</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --cabinet: #123A3D;
+    --cabinet-dark: #0B2628;
+    --ticket: #F3EBD6;
+    --ticket-shadow: #d9cea9;
+    --ink: #1E2B29;
+    --ink-soft: #5C6B67;
+    --bulb-amber: #FFC145;
+    --bulb-red: #E2472F;
+    --rock-btn: #D8483A;
+    --rock-btn-dark: #9c2f24;
+    --paper-btn: #E8AC3C;
+    --paper-btn-dark: #a97620;
+    --scissors-btn: #2F79A8;
+    --scissors-btn-dark: #1f5375;
+    --win: #2E7D46;
+    --lose: #B23A2C;
+    --tie: #A97F1F;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at 50% 0%, var(--cabinet) 0%, var(--cabinet-dark) 75%);
+    color:var(--ink);
+    font-family:'Space Mono', monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:36px 14px;
+  }
+
+  .cabinet{
+    width:100%;
+    max-width:480px;
+  }
+
+  /* ---- Marquee header ---- */
+  .marquee{
+    text-align:center;
+    padding:18px 10px 22px;
+    position:relative;
+  }
+
+  .bulb-row{
+    display:flex;
+    justify-content:center;
+    gap:9px;
+    margin-bottom:10px;
+  }
+  .bulb-row.bottom{ margin-bottom:0; margin-top:12px; }
+
+  .bulb{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--bulb-amber);
+    box-shadow:0 0 6px 2px rgba(255,193,69,0.7);
+    animation:flicker 2.6s infinite ease-in-out;
+  }
+  .bulb:nth-child(odd){
+    background:var(--bulb-red);
+    box-shadow:0 0 6px 2px rgba(226,71,47,0.6);
+    animation-delay:0.6s;
+  }
+  .bulb:nth-child(3n){ animation-delay:1.2s; }
+
+  @keyframes flicker{
+    0%, 100%{ opacity:1; }
+    50%{ opacity:0.45; }
+  }
+
+  .marquee h1{
+    font-family:'Bungee', sans-serif;
+    font-size:44px;
+    letter-spacing:0.02em;
+    margin:0;
+    color:var(--ticket);
+    text-shadow:
+      3px 3px 0 var(--bulb-red),
+      6px 6px 0 rgba(0,0,0,0.25);
+    line-height:1;
+  }
+
+  .marquee .subtitle{
+    margin-top:8px;
+    font-size:11px;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    color:var(--bulb-amber);
+  }
+
+  /* ---- Ticket cards (perforated) ---- */
+  .ticket{
+    position:relative;
+    background:var(--ticket);
+    border-radius:6px;
+    box-shadow:0 6px 0 var(--ticket-shadow), 0 10px 18px rgba(0,0,0,0.35);
+    margin-bottom:20px;
+    padding:20px 22px;
+  }
+
+  .ticket::before, .ticket::after{
+    content:"";
+    position:absolute;
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    background:var(--cabinet-dark);
+    top:50%;
+    transform:translateY(-50%);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+  .ticket::before{ left:-11px; }
+  .ticket::after{ right:-11px; }
+
+  .ticket .perf-top, .ticket .perf-bottom{
+    position:absolute;
+    left:14px;
+    right:14px;
+    border-top:2px dashed var(--ticket-shadow);
+    height:0;
+  }
+  .ticket .perf-top{ top:0; }
+  .ticket .perf-bottom{ bottom:0; }
+
+  /* Scoreboard ticket */
+  .scoreboard{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:10px;
+  }
+
+  .score-block{ text-align:center; }
+  .score-block .label{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:2px;
+  }
+  .score-block .value{
+    font-family:'Bungee', sans-serif;
+    font-size:34px;
+    line-height:1;
+  }
+  #player-score{ color:var(--win); }
+  #computer-score{ color:var(--lose); }
+
+  .divider{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:10px;
+    letter-spacing:0.15em;
+    padding:0 6px;
+    border-left:1px dashed var(--ticket-shadow);
+    border-right:1px dashed var(--ticket-shadow);
+  }
+  .divider .tie-value{
+    font-family:'Bungee', sans-serif;
+    font-size:20px;
+    color:var(--tie);
+    display:block;
+    margin-bottom:2px;
+  }
+
+  /* Stage ticket */
+  .stage .fighters{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    padding:6px 0 4px;
+  }
+
+  .fighter{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+
+  .fighter .tag{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  .hand{
+    width:78px;
+    height:78px;
+    border-radius:50%;
+    background:#fff;
+    border:3px solid var(--cabinet-dark);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    transition:border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  #player-hand.shake, #computer-hand.shake{
+    animation:shake 0.5s ease-in-out;
+  }
+  @keyframes shake{
+    0%, 100%{ transform:rotate(0); }
+    25%{ transform:rotate(-8deg); }
+    50%{ transform:rotate(6deg); }
+    75%{ transform:rotate(-4deg); }
+  }
+
+  .hand.result-win{ border-color:var(--win); box-shadow:0 0 0 4px rgba(46,125,70,0.18); }
+  .hand.result-lose{ border-color:var(--lose); box-shadow:0 0 0 4px rgba(178,58,44,0.18); }
+  .hand.result-tie{ border-color:var(--tie); box-shadow:0 0 0 4px rgba(169,127,31,0.18); }
+
+  .vs-stamp{
+    font-family:'Bungee', sans-serif;
+    font-size:18px;
+    color:var(--bulb-red);
+    border:2px dashed var(--bulb-red);
+    border-radius:50%;
+    width:46px;
+    height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform:rotate(-9deg);
+    opacity:0.85;
+  }
+
+  .call{
+    text-align:center;
+    margin-top:16px;
+    min-height:26px;
+    font-size:14px;
+    letter-spacing:0.02em;
+  }
+  .call.win{ color:var(--win); font-weight:700; }
+  .call.lose{ color:var(--lose); font-weight:700; }
+  .call.tie{ color:var(--tie); font-weight:700; }
+  .call.idle{ color:var(--ink-soft); }
+
+  /* ---- Arcade buttons ---- */
+  .controls{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+    margin-bottom:18px;
+    padding:0 6px;
+  }
+
+  .choice-btn{
+    -webkit-appearance:none;
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    background:transparent;
+    color:var(--ticket);
+    font-family:'Space Mono', monospace;
+  }
+
+  .btn-cap{
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:32px;
+    transition:transform 0.08s ease, box-shadow 0.08s ease;
+  }
+
+  .choice-btn[data-choice="rock"] .btn-cap{
+    background:var(--rock-btn);
+    box-shadow:0 7px 0 var(--rock-btn-dark), 0 10px 14px rgba(0,0,0,0.35);
+  }
+  .choice-btn[data-choice="paper"] .btn-cap{
+    background:var(--paper-btn);
+    box-shadow:0 7px 0 var(--paper-btn-dark), 0 10px 14px rgba(0,0,0,0.35);
+  }
+  .choice-btn[data-choice="scissors"] .btn-cap{
+    background:var(--scissors-btn);
+    box-shadow:0 7px 0 var(--scissors-btn-dark), 0 10px 14px rgba(0,0,0,0.35);
+  }
+
+  .choice-btn:active .btn-cap{
+    transform:translateY(5px);
+  }
+  .choice-btn[data-choice="rock"]:active .btn-cap{ box-shadow:0 2px 0 var(--rock-btn-dark); }
+  .choice-btn[data-choice="paper"]:active .btn-cap{ box-shadow:0 2px 0 var(--paper-btn-dark); }
+  .choice-btn[data-choice="scissors"]:active .btn-cap{ box-shadow:0 2px 0 var(--scissors-btn-dark); }
+
+  .choice-btn .name{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ticket);
+    opacity:0.8;
+  }
+
+  .choice-btn:focus-visible .btn-cap{
+    outline:3px solid var(--bulb-amber);
+    outline-offset:3px;
+  }
+
+  /* ---- Footer ---- */
+  .footer-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:11px;
+    color:var(--bulb-amber);
+    letter-spacing:0.1em;
+    padding:0 4px;
+  }
+
+  .reset-btn{
+    background:transparent;
+    border:2px solid var(--ticket);
+    color:var(--ticket);
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    padding:9px 16px;
+    border-radius:20px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  .reset-btn:hover{
+    background:var(--ticket);
+    color:var(--cabinet-dark);
+  }
+  .reset-btn:focus-visible{
+    outline:2px solid var(--bulb-amber);
+    outline-offset:2px;
+  }
+
+  @media (max-width:420px){
+    .marquee h1{ font-size:34px; }
+    .hand{ width:64px; height:64px; font-size:30px; }
+    .btn-cap{ font-size:26px; }
+    .ticket{ padding:16px 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bulb{ animation:none; }
+    #player-hand.shake, #computer-hand.shake{ animation:none; }
+    .choice-btn .btn-cap{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+
+  <div class="marquee">
+    <div class="bulb-row">
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span>
+    </div>
+    <h1>THROWDOWN</h1>
+    <div class="subtitle">Rock · Paper · Scissors</div>
+    <div class="bulb-row bottom">
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span><span class="bulb"></span><span class="bulb"></span>
+      <span class="bulb"></span>
+    </div>
+  </div>
+
+  <div class="ticket scoreboard">
+    <div class="perf-top"></div>
+    <div class="score-block">
+      <div class="label">You</div>
+      <div class="value" id="player-score">0</div>
+    </div>
+    <div class="divider">
+      <span class="tie-value" id="tie-score">0</span>
+      TIES
+    </div>
+    <div class="score-block">
+      <div class="label">Machine</div>
+      <div class="value" id="computer-score">0</div>
+    </div>
+    <div class="perf-bottom"></div>
+  </div>
+
+  <div class="ticket stage">
+    <div class="perf-top"></div>
+    <div class="fighters">
+      <div class="fighter">
+        <div class="tag">You</div>
+        <div class="hand" id="player-hand">?</div>
+      </div>
+      <div class="vs-stamp">VS</div>
+      <div class="fighter">
+        <div class="tag">Machine</div>
+        <div class="hand" id="computer-hand">?</div>
+      </div>
+    </div>
+    <div class="call idle" id="call-text">Insert a throw to begin.</div>
+    <div class="perf-bottom"></div>
+  </div>
+
+  <div class="controls">
+    <button class="choice-btn" data-choice="rock">
+      <span class="btn-cap">✊</span>
+      <span class="name">Rock</span>
+    </button>
+    <button class="choice-btn" data-choice="paper">
+      <span class="btn-cap">✋</span>
+      <span class="name">Paper</span>
+    </button>
+    <button class="choice-btn" data-choice="scissors">
+      <span class="btn-cap">✌️</span>
+      <span class="name">Scissors</span>
+    </button>
+  </div>
+
+  <div class="footer-row">
+    <span id="rounds-played">TICKET NO. 000</span>
+    <button class="reset-btn" id="reset-btn">New Game</button>
+  </div>
+
+</div>
+
+<script>
+  const ICONS = { rock: '✊', paper: '✋', scissors: '✌️' };
+  const BEATS = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+
+  const playerHandEl = document.getElementById('player-hand');
+  const computerHandEl = document.getElementById('computer-hand');
+  const callTextEl = document.getElementById('call-text');
+  const playerScoreEl = document.getElementById('player-score');
+  const computerScoreEl = document.getElementById('computer-score');
+  const tieScoreEl = document.getElementById('tie-score');
+  const roundsPlayedEl = document.getElementById('rounds-played');
+  const resetBtn = document.getElementById('reset-btn');
+  const choiceButtons = document.querySelectorAll('.choice-btn');
+
+  let scores = { player: 0, computer: 0, tie: 0 };
+  let rounds = 0;
+  let locked = false;
+
+  function randomChoice(){
+    const options = ['rock', 'paper', 'scissors'];
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  function decideWinner(player, computer){
+    if (player === computer) return 'tie';
+    return BEATS[player] === computer ? 'player' : 'computer';
+  }
+
+  function setHandState(el, state){
+    el.classList.remove('result-win', 'result-lose', 'result-tie');
+    if (state === 'win') el.classList.add('result-win');
+    if (state === 'lose') el.classList.add('result-lose');
+    if (state === 'tie') el.classList.add('result-tie');
+  }
+
+  function padTicket(num){
+    return String(num).padStart(3, '0');
+  }
+
+  function updateScoreboard(){
+    playerScoreEl.textContent = scores.player;
+    computerScoreEl.textContent = scores.computer;
+    tieScoreEl.textContent = scores.tie;
+    roundsPlayedEl.textContent = `TICKET NO. ${padTicket(rounds)}`;
+  }
+
+  function capitalize(word){
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }
+
+  function playRound(playerChoice){
+    if (locked) return;
+    locked = true;
+
+    playerHandEl.textContent = ICONS[playerChoice];
+    computerHandEl.textContent = '?';
+    setHandState(playerHandEl, null);
+    setHandState(computerHandEl, null);
+    callTextEl.className = 'call idle';
+    callTextEl.textContent = 'Machine is choosing...';
+
+    setTimeout(() => {
+      const computerChoice = randomChoice();
+      const result = decideWinner(playerChoice, computerChoice);
+
+      computerHandEl.textContent = ICONS[computerChoice];
+
+      playerHandEl.classList.add('shake');
+      computerHandEl.classList.add('shake');
+      setTimeout(() => {
+        playerHandEl.classList.remove('shake');
+        computerHandEl.classList.remove('shake');
+      }, 500);
+
+      rounds += 1;
+
+      if (result === 'tie'){
+        scores.tie += 1;
+        setHandState(playerHandEl, 'tie');
+        setHandState(computerHandEl, 'tie');
+        callTextEl.className = 'call tie';
+        callTextEl.textContent = `Push — both threw ${playerChoice}`;
+      } else if (result === 'player'){
+        scores.player += 1;
+        setHandState(playerHandEl, 'win');
+        setHandState(computerHandEl, 'lose');
+        callTextEl.className = 'call win';
+        callTextEl.textContent = `You win — ${capitalize(playerChoice)} beats ${computerChoice}`;
+      } else {
+        scores.computer += 1;
+        setHandState(playerHandEl, 'lose');
+        setHandState(computerHandEl, 'win');
+        callTextEl.className = 'call lose';
+        callTextEl.textContent = `Machine wins — ${capitalize(computerChoice)} beats ${playerChoice}`;
+      }
+
+      updateScoreboard();
+      locked = false;
+    }, 500);
+  }
+
+  function resetMatch(){
+    scores = { player: 0, computer: 0, tie: 0 };
+    rounds = 0;
+    locked = false;
+    playerHandEl.textContent = '?';
+    computerHandEl.textContent = '?';
+    setHandState(playerHandEl, null);
+    setHandState(computerHandEl, null);
+    callTextEl.className = 'call idle';
+    callTextEl.textContent = 'Insert a throw to begin.';
+    updateScoreboard();
+  }
+
+  choiceButtons.forEach(btn => {
+    btn.addEventListener('click', () => playRound(btn.dataset.choice));
+  });
+
+  resetBtn.addEventListener('click', resetMatch);
+
+  updateScoreboard();
+</script>
+
+</body>
+</html>
